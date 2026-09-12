@@ -81,8 +81,8 @@
 <body>
 
     <div class="terminal-header">
-        <h1>> CRYPTO_TERMINAL_v1.3</h1>
-        <div class="status">Status: Connected | Real-Time Feed Active</div>
+        <h1>> CRYPTO_TERMINAL_v1.4</h1>
+        <div class="status">Status: Connected | Live Feed Active</div>
     </div>
 
     <div class="section-title">Market Watch</div>
@@ -96,9 +96,8 @@
     </div>
 
     <script>
-        // Menggunakan CryptoCompare News API via JSONP/CORS-safe fetch alternatif
         async function loadData() {
-            // 1. Load Market Data (CoinGecko)
+            // 1. Load Market Data
             try {
                 const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,cardano&vs_currencies=usd&include_24hr_change=true');
                 const data = await res.json();
@@ -114,18 +113,20 @@
                 document.getElementById('market-feed').innerHTML = `<div class="market-row"><span style="color:#f85149">Gagal memuat harga pasar.</span></div>`;
             }
 
-            // 2. Load News Feed (CryptoCompare)
+            // 2. Load News Feed (CoinGecko Status Updates / Public RSS Proxy)
             try {
-                const resNews = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+                const resNews = await fetch('https://api.coingecko.com/api/v3/status_updates');
                 const jsonNews = await resNews.json();
                 
-                if (jsonNews && jsonNews.Data) {
+                if (jsonNews && jsonNews.status_updates) {
                     let htmlContent = '';
-                    jsonNews.Data.slice(0, 5).forEach(item => {
+                    jsonNews.status_updates.slice(0, 5).forEach(item => {
+                        let desc = item.description.length > 90 ? item.description.substring(0, 90) + '...' : item.description;
                         htmlContent += `
                             <div class="news-item">
-                                <a href="${item.url}" target="_blank" class="news-title">${item.title}</a>
-                                <div class="news-meta">Sumber: ${item.source_info.name}</div>
+                                <a href="${item.project.link || '#'}" target="_blank" class="news-title">${item.project.name}: Berita Pembaruan</a>
+                                <div style="font-size:0.75rem; color:#c9d1d9; margin-bottom:3px;">${desc}</div>
+                                <div class="news-meta">Kategori: ${item.category} | Sumber: Resmi Proyek</div>
                             </div>
                         `;
                     });
@@ -137,7 +138,6 @@
         }
 
         loadData();
-        // Auto refresh tiap 1 menit
         setInterval(loadData, 60000);
     </script>
 
