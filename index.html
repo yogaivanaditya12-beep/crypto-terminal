@@ -18,44 +18,54 @@
             margin-bottom: 15px;
         }
         .terminal-header h1 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #7ee787;
             margin: 0 0 4px 0;
         }
         .status {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #8b949e;
         }
         .section-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #ffb454;
-            margin: 15px 0 8px 0;
+            margin: 12px 0 6px 0;
             text-transform: uppercase;
             border-left: 3px solid #ffb454;
             padding-left: 6px;
         }
-        .market-box, .news-item {
+        .box {
             background-color: #161b22;
             border: 1px solid #30363d;
             padding: 10px;
             border-radius: 6px;
             margin-bottom: 8px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         .market-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 5px 0;
             border-bottom: 1px dashed #30363d;
         }
         .market-row:last-child {
             border-bottom: none;
         }
+        .news-item {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #30363d;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
         .news-title {
             color: #f0f6fc;
             text-decoration: none;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             font-weight: bold;
         }
         .news-title:hover {
@@ -63,7 +73,7 @@
             text-decoration: underline;
         }
         .news-meta {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #8b949e;
         }
     </style>
@@ -71,71 +81,64 @@
 <body>
 
     <div class="terminal-header">
-        <h1>> CRYPTO_TERMINAL_v1.2</h1>
-        <div class="status">Status: Online | Secure Feed Active</div>
+        <h1>> CRYPTO_TERMINAL_v1.3</h1>
+        <div class="status">Status: Connected | Real-Time Feed Active</div>
     </div>
 
     <div class="section-title">Market Watch</div>
-    <div class="market-box" id="market-feed">
-        <div class="market-row"><span>Memuat data harga...</span></div>
+    <div class="box" id="market-feed">
+        <div class="market-row"><span>Memuat harga pasar...</span></div>
     </div>
 
     <div class="section-title">Global Crypto News</div>
-    <div id="news-feed">
-        <div class="news-item">Mengambil siaran berita global...</div>
+    <div class="box" id="news-feed">
+        <div>Mengunduh siaran berita...</div>
     </div>
 
     <script>
-        // Ambil Data Harga Crypto
-        async function loadMarket() {
+        // Menggunakan CryptoCompare News API via JSONP/CORS-safe fetch alternatif
+        async function loadData() {
+            // 1. Load Market Data (CoinGecko)
             try {
                 const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,cardano&vs_currencies=usd&include_24hr_change=true');
                 const data = await res.json();
                 
-                const marketDiv = document.getElementById('market-feed');
-                marketDiv.innerHTML = `
-                    <div class="market-row"><span>BTC/USD</span> <span>$${data.bitcoin.usd.toLocaleString()} (${data.bitcoin.usd_24h_change.toFixed(2)}%)</span></div>
-                    <div class="market-row"><span>ETH/USD</span> <span>$${data.ethereum.usd.toLocaleString()} (${data.ethereum.usd_24h_change.toFixed(2)}%)</span></div>
-                    <div class="market-row"><span>SOL/USD</span> <span>$${data.solana.usd.toLocaleString()} (${data.solana.usd_24h_change.toFixed(2)}%)</span></div>
-                    <div class="market-row"><span>XRP/USD</span> <span>$${data.ripple.usd.toLocaleString()} (${data.ripple.usd_24h_change.toFixed(2)}%)</span></div>
-                    <div class="market-row"><span>ADA/USD</span> <span>$${data.cardano.usd.toLocaleString()} (${data.cardano.usd_24h_change.toFixed(2)}%)</span></div>
+                document.getElementById('market-feed').innerHTML = `
+                    <div class="market-row"><span>BTC/USD</span> <span>$${data.bitcoin.usd.toLocaleString()} <b style="color:${data.bitcoin.usd_24h_change>=0?'#56d364':'#f85149'}">${data.bitcoin.usd_24h_change.toFixed(2)}%</b></span></div>
+                    <div class="market-row"><span>ETH/USD</span> <span>$${data.ethereum.usd.toLocaleString()} <b style="color:${data.ethereum.usd_24h_change>=0?'#56d364':'#f85149'}">${data.ethereum.usd_24h_change.toFixed(2)}%</b></span></div>
+                    <div class="market-row"><span>SOL/USD</span> <span>$${data.solana.usd.toLocaleString()} <b style="color:${data.solana.usd_24h_change>=0?'#56d364':'#f85149'}">${data.solana.usd_24h_change.toFixed(2)}%</b></span></div>
+                    <div class="market-row"><span>XRP/USD</span> <span>$${data.ripple.usd.toLocaleString()} <b style="color:${data.ripple.usd_24h_change>=0?'#56d364':'#f85149'}">${data.ripple.usd_24h_change.toFixed(2)}%</b></span></div>
+                    <div class="market-row"><span>ADA/USD</span> <span>$${data.cardano.usd.toLocaleString()} <b style="color:${data.cardano.usd_24h_change>=0?'#56d364':'#f85149'}">${data.cardano.usd_24h_change.toFixed(2)}%</b></span></div>
                 `;
-            } catch (err) {
-                console.log("Market error");
+            } catch (e) {
+                document.getElementById('market-feed').innerHTML = `<div class="market-row"><span style="color:#f85149">Gagal memuat harga pasar.</span></div>`;
             }
-        }
 
-        // Ambil Berita Crypto
-        async function loadNews() {
-            const container = document.getElementById('news-feed');
+            // 2. Load News Feed (CryptoCompare)
             try {
-                const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
-                const json = await res.json();
+                const resNews = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+                const jsonNews = await resNews.json();
                 
-                if (json && json.Data) {
-                    container.innerHTML = '';
-                    json.Data.slice(0, 6).forEach(item => {
-                        container.innerHTML += `
+                if (jsonNews && jsonNews.Data) {
+                    let htmlContent = '';
+                    jsonNews.Data.slice(0, 5).forEach(item => {
+                        htmlContent += `
                             <div class="news-item">
                                 <a href="${item.url}" target="_blank" class="news-title">${item.title}</a>
                                 <div class="news-meta">Sumber: ${item.source_info.name}</div>
                             </div>
                         `;
                     });
+                    document.getElementById('news-feed').innerHTML = htmlContent;
                 }
-            } catch (err) {
-                container.innerHTML = `<div class="news-item" style="color: #f85149;">Gagal memuat berita terbaru.</div>`;
+            } catch (e) {
+                document.getElementById('news-feed').innerHTML = `<div style="color: #f85149;">Gagal memuat berita.</div>`;
             }
         }
 
-        loadMarket();
-        loadNews();
-
-        // Refresh otomatis setiap 1 menit
-        setInterval(() => {
-            loadMarket();
-            loadNews();
-        }, 60000);
+        loadData();
+        // Auto refresh tiap 1 menit
+        setInterval(loadData, 60000);
     </script>
 
 </body>
