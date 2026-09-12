@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto News Terminal</title>
+    <title>Crypto News Terminal v2.0</title>
     <style>
         body {
             background-color: #0d1117;
@@ -15,7 +15,7 @@
         .terminal-header {
             border-bottom: 1px solid #30363d;
             padding-bottom: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .terminal-header h1 {
             font-size: 1.1rem;
@@ -42,6 +42,23 @@
             margin-bottom: 8px;
             font-size: 0.8rem;
         }
+        /* Search Input */
+        .terminal-input {
+            width: 100%;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #7ee787;
+            padding: 6px 8px;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .terminal-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
         .market-row {
             display: flex;
             justify-content: space-between;
@@ -51,6 +68,30 @@
         .market-row:last-child {
             border-bottom: none;
         }
+        /* Calculator styling */
+        .calc-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .calc-input, .calc-select {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #f0f6fc;
+            padding: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .calc-input {
+            flex: 1;
+        }
+        .calc-result {
+            color: #7ee787;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        /* News */
         .news-item {
             margin-bottom: 10px;
             padding-bottom: 8px;
@@ -81,40 +122,104 @@
 <body>
 
     <div class="terminal-header">
-        <h1>> CRYPTO_TERMINAL_v1.5</h1>
-        <div class="status">Status: Connected | Live Feed Active</div>
+        <h1>> CRYPTO_TERMINAL_v2.0</h1>
+        <div class="status">Status: Connected | Tools Active</div>
     </div>
 
+    <!-- Market Watch with Search -->
     <div class="section-title">Market Watch</div>
-    <div class="box" id="market-feed">
-        <div class="market-row"><span>Memuat harga pasar...</span></div>
+    <div class="box">
+        <input type="text" id="coinSearch" class="terminal-input" placeholder="> Cari koin (cth: btc, eth)..." onkeyup="filterMarket()">
+        <div id="market-feed">
+            <div class="market-row"><span>Memuat harga pasar...</span></div>
+        </div>
     </div>
 
+    <!-- Quick Converter -->
+    <div class="section-title">Quick Converter</div>
+    <div class="box">
+        <div class="calc-group">
+            <input type="number" id="calcAmount" class="calc-input" placeholder="Jumlah" value="1" oninput="calculateCrypto()">
+            <select id="calcCoin" class="calc-select" onchange="calculateCrypto()">
+                <option value="bitcoin">BTC</option>
+                <option value="ethereum">ETH</option>
+                <option value="solana">SOL</option>
+                <option value="ripple">XRP</option>
+                <option value="cardano">ADA</option>
+            </select>
+        </div>
+        <div class="calc-result" id="calcOutput">Hasil: $0.00 USD</div>
+    </div>
+
+    <!-- Global News -->
     <div class="section-title">Global Crypto News Wire</div>
     <div class="box" id="news-feed">
         <div>Memuat berita terminal...</div>
     </div>
 
     <script>
+        let globalPrices = {};
+
         async function loadMarket() {
             try {
                 const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,cardano&vs_currencies=usd&include_24hr_change=true');
-                const data = await res.json();
-                
-                document.getElementById('market-feed').innerHTML = `
-                    <div class="market-row"><span>BTC/USD</span> <span>$${data.bitcoin.usd.toLocaleString()} <b style="color:${data.bitcoin.usd_24h_change>=0?'#56d364':'#f85149'}">${data.bitcoin.usd_24h_change.toFixed(2)}%</b></span></div>
-                    <div class="market-row"><span>ETH/USD</span> <span>$${data.ethereum.usd.toLocaleString()} <b style="color:${data.ethereum.usd_24h_change>=0?'#56d364':'#f85149'}">${data.ethereum.usd_24h_change.toFixed(2)}%</b></span></div>
-                    <div class="market-row"><span>SOL/USD</span> <span>$${data.solana.usd.toLocaleString()} <b style="color:${data.solana.usd_24h_change>=0?'#56d364':'#f85149'}">${data.solana.usd_24h_change.toFixed(2)}%</b></span></div>
-                    <div class="market-row"><span>XRP/USD</span> <span>$${data.ripple.usd.toLocaleString()} <b style="color:${data.ripple.usd_24h_change>=0?'#56d364':'#f85149'}">${data.ripple.usd_24h_change.toFixed(2)}%</b></span></div>
-                    <div class="market-row"><span>ADA/USD</span> <span>$${data.cardano.usd.toLocaleString()} <b style="color:${data.cardano.usd_24h_change>=0?'#56d364':'#f85149'}">${data.cardano.usd_24h_change.toFixed(2)}%</b></span></div>
-                `;
+                globalPrices = await res.json();
+                renderMarket(globalPrices);
+                calculateCrypto();
             } catch (e) {
                 document.getElementById('market-feed').innerHTML = `<div class="market-row"><span style="color:#f85149">Gagal memuat harga.</span></div>`;
             }
         }
 
+        function renderMarket(data) {
+            const coins = [
+                { id: 'bitcoin', symbol: 'BTC/USD' },
+                { id: 'ethereum', symbol: 'ETH/USD' },
+                { id: 'solana', symbol: 'SOL/USD' },
+                { id: 'ripple', symbol: 'XRP/USD' },
+                { id: 'cardano', symbol: 'ADA/USD' }
+            ];
+
+            const query = document.getElementById('coinSearch').value.toLowerCase();
+            let htmlContent = '';
+
+            coins.forEach(c => {
+                if (c.symbol.toLowerCase().includes(query)) {
+                    const coinData = data[c.id];
+                    const price = coinData.usd.toLocaleString();
+                    const change = coinData.usd_24h_change.toFixed(2);
+                    const color = change >= 0 ? '#56d364' : '#f85149';
+                    
+                    htmlContent += `
+                        <div class="market-row">
+                            <span>${c.symbol}</span> 
+                            <span>$${price} <b style="color:${color}">${change}%</b></span>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('market-feed').innerHTML = htmlContent || `<div class="market-row"><span>Koin tidak ditemukan</span></div>`;
+        }
+
+        function filterMarket() {
+            if (Object.keys(globalPrices).length > 0) {
+                renderMarket(globalPrices);
+            }
+        }
+
+        function calculateCrypto() {
+            const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
+            const selectedCoin = document.getElementById('calcCoin').value;
+            
+            if (globalPrices[selectedCoin]) {
+                const pricePerUnit = globalPrices[selectedCoin].usd;
+                const total = amount * pricePerUnit;
+                document.getElementById('calcOutput').innerText = `Hasil: $${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`;
+            }
+        }
+
         function loadNews() {
-            // Berita terminal langsung yang aman dari blokir CORS browser
             const fallbackNews = [
                 { title: "Bitcoin Volatility Surges Past Key Resistance Levels as Institutional Inflows Continue", source: "CoinDesk", time: "10m ago", url: "https://coindesk.com" },
                 { title: "Ethereum Layer-2 Network Activity Reaches New All-Time High Volume", source: "Decrypt", time: "25m ago", url: "https://decrypt.co" },
