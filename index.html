@@ -7,185 +7,134 @@
     <style>
         body {
             background-color: #0d1117;
-            color: #ffb454;
+            color: #58a6ff;
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 10px;
-        }
-        .terminal-container {
-            max-width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .panel {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 6px;
             padding: 12px;
         }
-        .panel-title {
-            font-size: 0.85rem;
-            color: #7ee787;
+        .terminal-header {
             border-bottom: 1px solid #30363d;
-            padding-bottom: 6px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
         }
-        /* Market Watch Table */
-        .market-table {
-            width: 100%;
-            border-collapse: collapse;
+        .terminal-header h1 {
+            font-size: 1.2rem;
+            color: #7ee787;
+            margin: 0 0 4px 0;
+        }
+        .status {
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+        .section-title {
+            font-size: 0.85rem;
+            color: #ffb454;
+            margin: 15px 0 8px 0;
+            text-transform: uppercase;
+            border-left: 3px solid #ffb454;
+            padding-left: 6px;
+        }
+        .market-box, .news-item {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
             font-size: 0.85rem;
         }
-        .market-table th, .market-table td {
-            text-align: left;
-            padding: 6px 4px;
-        }
-        .market-table th {
-            color: #8b949e;
-            font-weight: normal;
-        }
-        .price-up {
-            color: #56d364;
-        }
-        /* News List */
-        .news-list {
+        .market-row {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 350px;
-            overflow-y: auto;
-        }
-        .news-item {
+            justify-content: space-between;
+            padding: 4px 0;
             border-bottom: 1px dashed #30363d;
-            padding-bottom: 8px;
         }
-        .news-item:last-child {
+        .market-row:last-child {
             border-bottom: none;
         }
-        .news-link {
-            color: #58a6ff;
+        .news-title {
+            color: #f0f6fc;
             text-decoration: none;
-            font-size: 0.85rem;
             display: block;
             margin-bottom: 4px;
+            font-weight: bold;
         }
-        .news-link:hover {
+        .news-title:hover {
+            color: #58a6ff;
             text-decoration: underline;
         }
-        .news-time {
+        .news-meta {
             font-size: 0.7rem;
-            color: #8b949e;
-        }
-        /* Logs */
-        .logs {
-            font-size: 0.75rem;
             color: #8b949e;
         }
     </style>
 </head>
 <body>
 
-    <div class="terminal-container">
-        <!-- Market Watch Panel -->
-        <div class="panel">
-            <div class="panel-title">> Market Watch (Live)</div>
-            <table class="market-table">
-                <thead>
-                    <tr>
-                        <th>Asset</th>
-                        <th>Price (USD)</th>
-                        <th>24h</th>
-                    </tr>
-                </thead>
-                <tbody id="market-data">
-                    <tr><td colspan="3">Memuat data pasar...</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="terminal-header">
+        <h1>> CRYPTO_TERMINAL_v1.2</h1>
+        <div class="status">Status: Online | Secure Feed Active</div>
+    </div>
 
-        <!-- Global Crypto News Feed Panel -->
-        <div class="panel">
-            <div class="panel-title">> Global Crypto Wire & News Feed</div>
-            <div id="news-container" class="news-list">
-                <div class="news-item">Menghubungkan ke jaringan data berita global...</div>
-            </div>
-        </div>
+    <div class="section-title">Market Watch</div>
+    <div class="market-box" id="market-feed">
+        <div class="market-row"><span>Memuat data harga...</span></div>
+    </div>
 
-        <!-- System Logs -->
-        <div class="panel">
-            <div class="panel-title">> System Logs</div>
-            <div class="logs" id="system-logs">
-                [02:51:00] WS_CONNECT: OK<br>
-                [02:51:02] FEED_PARSER: ACTIVE<br>
-                [02:51:05] SECURE_SOCKET: LISTENING
-            </div>
-        </div>
+    <div class="section-title">Global Crypto News</div>
+    <div id="news-feed">
+        <div class="news-item">Mengambil siaran berita global...</div>
     </div>
 
     <script>
-        // Fungsi Ambil Harga Crypto Real-Time
-        async function fetchMarketData() {
+        // Ambil Data Harga Crypto
+        async function loadMarket() {
             try {
-                const res = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL,XRP,ADA&tsyms=USD');
-                const json = await res.json();
-                const tbody = document.getElementById('market-data');
-                tbody.innerHTML = '';
-
-                const coins = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA'];
-                coins.forEach(coin => {
-                    const data = json.RAW[coin].USD;
-                    const price = data.PRICE.toLocaleString();
-                    const change = data.CHANGEPCT24HOUR.toFixed(2);
-                    const changeClass = change >= 0 ? 'price-up' : '';
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${coin}/USDT</td>
-                            <td>$${price}</td>
-                            <td class="${changeClass}">${change >= 0 ? '+' : ''}${change}%</td>
-                        </tr>
-                    `;
-                });
-            } catch (e) {
-                console.error("Gagal memuat pasar");
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,cardano&vs_currencies=usd&include_24hr_change=true');
+                const data = await res.json();
+                
+                const marketDiv = document.getElementById('market-feed');
+                marketDiv.innerHTML = `
+                    <div class="market-row"><span>BTC/USD</span> <span>$${data.bitcoin.usd.toLocaleString()} (${data.bitcoin.usd_24h_change.toFixed(2)}%)</span></div>
+                    <div class="market-row"><span>ETH/USD</span> <span>$${data.ethereum.usd.toLocaleString()} (${data.ethereum.usd_24h_change.toFixed(2)}%)</span></div>
+                    <div class="market-row"><span>SOL/USD</span> <span>$${data.solana.usd.toLocaleString()} (${data.solana.usd_24h_change.toFixed(2)}%)</span></div>
+                    <div class="market-row"><span>XRP/USD</span> <span>$${data.ripple.usd.toLocaleString()} (${data.ripple.usd_24h_change.toFixed(2)}%)</span></div>
+                    <div class="market-row"><span>ADA/USD</span> <span>$${data.cardano.usd.toLocaleString()} (${data.cardano.usd_24h_change.toFixed(2)}%)</span></div>
+                `;
+            } catch (err) {
+                console.log("Market error");
             }
         }
 
-        // Fungsi Ambil Berita Crypto Real-Time
-        async function fetchNews() {
-            const container = document.getElementById('news-container');
+        // Ambil Berita Crypto
+        async function loadNews() {
+            const container = document.getElementById('news-feed');
             try {
                 const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
                 const json = await res.json();
                 
                 if (json && json.Data) {
                     container.innerHTML = '';
-                    json.Data.slice(0, 8).forEach(item => {
-                        const date = new Date(item.published_on * 1000).toLocaleTimeString();
+                    json.Data.slice(0, 6).forEach(item => {
                         container.innerHTML += `
                             <div class="news-item">
-                                <a href="${item.url}" target="_blank" class="news-link">${item.title}</a>
-                                <div class="news-time">[${date}] Source: ${item.source_info.name}</div>
+                                <a href="${item.url}" target="_blank" class="news-title">${item.title}</a>
+                                <div class="news-meta">Sumber: ${item.source_info.name}</div>
                             </div>
                         `;
                     });
                 }
-            } catch (e) {
-                container.innerHTML = `<div class="news-item" style="color: #ff5555;">Gagal memuat berita terbaru.</div>`;
+            } catch (err) {
+                container.innerHTML = `<div class="news-item" style="color: #f85149;">Gagal memuat berita terbaru.</div>`;
             }
         }
 
-        // Jalankan saat pertama kali dibuka
-        fetchMarketData();
-        fetchNews();
+        loadMarket();
+        loadNews();
 
-        // Auto refresh setiap 60 detik (1 menit)
+        // Refresh otomatis setiap 1 menit
         setInterval(() => {
-            fetchMarketData();
-            fetchNews();
+            loadMarket();
+            loadNews();
         }, 60000);
     </script>
 
