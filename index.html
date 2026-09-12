@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS // Crypto Terminal & News Wire</title>
+  <style>
+    :root {
+      --bg-terminal: #020202;
+      --panel-bg: #0a0a0a;
+      --border-color: #1f1f1f;
+      --terminal-green: #00ff66;
+      --terminal-red: #ff3333;
+      --text-main: #cccccc;
+      --text-dimmed: #555555;
+      --accent-amber: #ffb000;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    body {
+      background-color: var(--bg-terminal);
+      color: var(--text-main);
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 35px 1fr 25px;
+      overflow: hidden;
+    }
+
+    /* Top Bar Ticker */
+    .ticker-bar {
+      background: #000;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 0.75rem;
+    }
+
+    .ticker-track {
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker 30s linear infinite;
+    }
+
+    .ticker-item {
+      display: inline-block;
+      margin-right: 40px;
+    }
+
+    .ticker-item span.up { color: var(--terminal-green); }
+    .ticker-item span.down { color: var(--terminal-red); }
+
+    @keyframes ticker {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+
+    /* Main Terminal Layout */
+    .terminal-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      grid-template-rows: 1fr;
+      gap: 4px;
+      background: var(--border-color);
+      padding: 4px;
+      height: calc(100vh - 60px);
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: #0d0d0d;
+      padding: 8px 12px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--accent-amber);
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Left Column: Market List & Quick Stats */
+    .market-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: transparent;
+      border: none;
+    }
+
+    .sub-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .market-list {
+      list-style: none;
+      overflow-y: auto;
+      max-height: 250px;
+    }
+
+    .market-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .market-row span:last-child {
+      font-weight: bold;
+    }
+
+    /* Right Column: News Terminal Stream */
+    .news-main-panel {
+      grid-column: 2 / 3;
+    }
+
+    .news-feed-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .news-card {
+      background: rgba(255, 255, 255, 0.015);
+      border-left: 2px solid var(--accent-amber);
+      padding: 10px 12px;
+      border-radius: 0 4px 4px 0;
+      transition: background 0.2s ease;
+    }
+
+    .news-card:hover {
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-dimmed);
+      margin-bottom: 4px;
+    }
+
+    .news-source {
+      color: var(--terminal-green);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .news-title {
+      font-size: 0.85rem;
+      color: var(--text-main);
+      text-decoration: none;
+      line-height: 1.4;
+      display: block;
+    }
+
+    .news-title:hover {
+      color: var(--accent-amber);
+      text-decoration: underline;
+    }
+
+    /* Bottom Status Bar */
+    .status-bar {
+      background: #000;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 0.68rem;
+      color: var(--text-dimmed);
+    }
+
+    .status-active {
+      color: var(--terminal-green);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-terminal); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Ticker Bar Atas -->
+  <div class="ticker-bar">
+    <div class="ticker-track">
+      <div class="ticker-item">BTC/USD: <span class="up">$68,420.00 (+3.42%)</span></div>
+      <div class="ticker-item">ETH/USD: <span class="up">$3,540.50 (+1.85%)</span></div>
+      <div class="ticker-item">SOL/USD: <span class="down">$142.10 (-0.92%)</span></div>
+      <div class="ticker-item">TOTAL CRYPTO CAP: <span class="up">$2.45T (+2.1%)</span></div>
+      <div class="ticker-item">GAS (GWEI): <span>12 GWEI</span></div>
+    </div>
+  </div>
+
+  <!-- 2. Konten Utama Terminal -->
+  <div class="terminal-container">
+    
+    <!-- Kolom Kiri: Watchlist Harga Pasar -->
+    <div class="market-sidebar">
+      <div class="sub-panel">
+        <div class="panel-header">
+          <span>MARKET WATCH</span>
+          <span>LIVE</span>
+        </div>
+        <ul class="market-list" id="marketList">
+          <li class="market-row"><span>BTC/USDT</span> <span class="up">68,420.00</span></li>
+          <li class="market-row"><span>ETH/USDT</span> <span class="up">3,540.50</span></li>
+          <li class="market-row"><span>SOL/USDT</span> <span class="down">142.10</span></li>
+          <li class="market-row"><span>XRP/USDT</span> <span class="up">0.5840</span></li>
+          <li class="market-row"><span>ADA/USDT</span> <span class="down">0.4520</span></li>
+          <li class="market-row"><span>AVAX/USDT</span> <span class="up">28.90</span></li>
+        </ul>
+      </div>
+
+      <div class="sub-panel" style="flex: 1; margin-top: 4px;">
+        <div class="panel-header">
+          <span>SYSTEM LOGS</span>
+        </div>
+        <div style="padding: 10px; font-size: 0.7rem; color: var(--text-dimmed); line-height: 1.5;">
+          [01:28:11] WS_CONNECT: OK<br>
+          [01:28:15] FEED_PARSER: ACTIVE<br>
+          [01:28:18] SECURE_SOCKET: LISTENING
+        </div>
+      </div>
+    </div>
+
+    <!-- Kolom Kanan: Live News Wire -->
+    <div class="panel news-main-panel">
+      <div class="panel-header">
+        <span>GLOBAL CRYPTO WIRE & INTEL FEED</span>
+        <span id="updateStatus">AUTO-REFRESH: ON</span>
+      </div>
+      <div class="news-feed-container" id="newsFeed">
+        <!-- Berita akan dimuat secara dinamis via JavaScript -->
+        <div class="news-card">
+          <div class="news-meta">
+            <span class="news-source">SYSTEM WIRE</span>
+            <span>INITIALIZING...</span>
+          </div>
+          <p class="news-title" style="color: var(--text-dimmed);">Menghubungkan ke jaringan data berita global...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 3. Status Bar Bawah -->
+  <div class="status-bar">
+    <div>NODE STATUS: <span class="status-active">CONNECTED</span></div>
+    <div>FEED PROTOCOL: RSS / JSON STREAM</div>
+    <div>LATENCY: 18ms</div>
+  </div>
+
+  <script>
+    // Fungsi untuk menarik berita kripto secara real-time dari API publik (CryptoCompare News API)
+    async function fetchCryptoNews() {
+      const newsFeedContainer = document.getElementById('newsFeed');
+      const updateStatus = document.getElementById('updateStatus');
+
+      try {
+        updateStatus.textContent = "UPDATING...";
+        const response = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+        const data = await response.json();
+
+        if (data && data.Data) {
+          newsFeedContainer.innerHTML = ''; // Bersihkan kontainer
+
+          data.Data.slice(0, 15).forEach(item => {
+            // Konversi timestamp ke format jam UTC
+            const dateObj = new Date(item.published_on * 1000);
+            const timeString = dateObj.toTimeString().split(' ')[0] + ' UTC';
+
+            const card = document.createElement('div');
+            card.className = 'news-card';
+            card.innerHTML = `
+              <div class="news-meta">
+                <span class="news-source">${item.source_info.name}</span>
+                <span>${timeString}</span>
+              </div>
+              <a href="${item.url}" target="_blank" class="news-title">${item.title}</a>
+            `;
+            newsFeedContainer.appendChild(card);
+          });
+          updateStatus.textContent = "AUTO-REFRESH: ACTIVE";
+        }
+      } catch (error) {
+        updateStatus.textContent = "ERROR: OFFLINE CACHE";
+        console.error("Gagal mengambil data berita:", error);
+      }
+    }
+
+    // Jalankan saat pertama kali dimuat
+    fetchCryptoNews();
+
+    // Perbarui berita otomatis setiap 60 detik
+    setInterval(fetchCryptoNews, 60000);
+  </script>
+</body>
+</html>
